@@ -19,7 +19,7 @@
   action:
     ref: irflow.create_alert
     parameters:
-      incoming_field_group_name: "AD Watched Group Changed - {{ trigger.response.tenant }}"
+      incoming_field_group_name: "AD Watched Group Changed - {{ trigger.tenant }}"
       log_level: "DEBUG"
       description: "AD Watched Group Changed"
       payload: "{{ trigger.response }}"
