@@ -24,3 +24,4 @@
       description: "AD Watched Group Changed"
       payload: "{{ trigger }}"
       suppress_missing_field_warning: true
+      credential_name: "{{ trigger.tenant }}"
