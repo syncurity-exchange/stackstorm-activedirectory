@@ -22,5 +22,5 @@
       incoming_field_group_name: "AD Watched Group Changed - {{ trigger.response.tenant }}"
       log_level: "DEBUG"
       description: "AD Watched Group Changed"
-      payload: "{{ trigger.payload }}"
+      payload: "{{ trigger.response }}"
       suppress_missing_field_warning: true
