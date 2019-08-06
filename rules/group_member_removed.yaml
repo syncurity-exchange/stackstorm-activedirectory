@@ -22,6 +22,6 @@
       incoming_field_group_name: "Monitored AD Group - User Removed"
       log_level: "DEBUG"
       description: "Monitored AD Group - User Removed"
-      payload: "{{ trigger.payload }}"
+      payload: "{{ trigger }}"
       suppress_missing_field_warning: true
       credential_name: integrations_team
