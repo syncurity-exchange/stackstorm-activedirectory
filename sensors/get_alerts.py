@@ -151,9 +151,7 @@ class ADAdminSensor(PollingSensor):
     def _get_members(self, group):
         if not self.members.get(group) and hasattr(self.sensor_service, 'get_value'):
             temp = self.sensor_service.get_value(group + '.members')
-            self._logger.info('type of temp')
-            self._logger.info(type(temp))
-            self.members[group] = temp
+            self.members[group] = list(temp)
 
         return self.members[group]
 
