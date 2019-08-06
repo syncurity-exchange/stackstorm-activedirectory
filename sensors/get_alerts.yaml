@@ -1,0 +1,15 @@
+---
+  class_name: "ADAdminSensor"
+  entry_point: "get_alerts.py"
+  description: "Get alerts for Active Directory"
+  poll_interval: 120
+  trigger_types:
+    -
+      name: "watched_group_changed"
+      description: "Watched Group Change Alert in Active Directory"
+      payload_schema:
+        type: "object"
+        properties:
+          response:
+            type: "object"
+
