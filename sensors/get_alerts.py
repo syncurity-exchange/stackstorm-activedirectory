@@ -2,6 +2,7 @@
 
 """Active Directory Integration - Sense admin list change"""
 
+import ast
 import json
 
 import winrm
@@ -151,7 +152,8 @@ class ADAdminSensor(PollingSensor):
     def _get_members(self, group):
         if not self.members.get(group) and hasattr(self.sensor_service, 'get_value'):
             temp = self.sensor_service.get_value(group + '.members')
-            self.members[group] = list(temp)
+            fixed = ast.literal_eval(temp)
+            self.members[group] = fixed
 
         return self.members[group]
 
