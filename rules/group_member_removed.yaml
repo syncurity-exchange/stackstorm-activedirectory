@@ -24,3 +24,4 @@
       description: "Monitored AD Group - User Removed"
       payload: "{{ trigger.payload }}"
       suppress_missing_field_warning: true
+      credential_name: "integrations_team"
