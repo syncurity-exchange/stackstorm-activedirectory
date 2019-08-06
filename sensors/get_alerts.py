@@ -43,7 +43,9 @@ class ADAdminSensor(PollingSensor):
         self.members = {}
 
         for group in self.groups:
-            self.members[group] = [{'SamAccountName': 'initial'}]
+            self.members[group] = self._get_members(group)
+            if not self.members.get(group):
+                self.members[group] = [{'SamAccountName': 'initial'}]
 
     def setup(self):
         pass
