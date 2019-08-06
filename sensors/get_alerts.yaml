@@ -17,6 +17,13 @@
       payload_schema:
         type: "object"
         properties:
-          response:
-            type: "object"
-
+          accountsAdded:
+            type: "array"
+          accountsRemoved:
+            type: "array"
+          groupName:
+            type: "string"
+          tenant:
+            type: "string"
+          SamAccountNames:
+            type: "array"
