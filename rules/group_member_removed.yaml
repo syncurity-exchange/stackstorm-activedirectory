@@ -1,7 +1,7 @@
 ---
   name: watched_group_member_removed
   pack: activedirectory
-  description: Response to trigger then AD watched group memebership has a deletion
+  description: AD watched group memebership has a deletion
   enabled: false
 
   type:

@@ -1,7 +1,7 @@
 ---
   name: watched_group_member_added
   pack: activedirectory
-  description: Response to trigger then AD watched group memebership has an addition
+  description: AD watched group memebership has an addition
   enabled: false
 
   type:
