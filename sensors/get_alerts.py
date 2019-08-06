@@ -90,8 +90,6 @@ class ADAdminSensor(PollingSensor):
 
             removed = []
             added = []
-            added_names = []
-            removed_names = []
 
             for new_item in response_list:
                 # self._logger.info('new_item')
@@ -101,36 +99,44 @@ class ADAdminSensor(PollingSensor):
                 # self._logger.info(type(members))
                 # self._logger.info(members)
                 if new_item not in members:
-                    added.append(new_item)
-                    added_names.append(new_item.get('SamAccountName'))
+                    name = new_item.get('SamAccountName')
+                    new_person = [name, new_item]
+                    added.append(new_person)
             for old_item in members:
                 if old_item not in response_list:
-                    removed.append(old_item)
-                    removed_names.append(old_item.get('SamAccountName'))
+                    name = old_item.get('SamAccountName')
+                    old_person = [name, old_item]
+                    removed.append(old_person)
 
             if added:
-                self._logger.info('New member in AD group ' + group + 'detected.')
-                payload = {
-                    'accountsAdded': added,
-                    'groupName': group,
-                    'tenant': self.creds_name,
-                    'samAccountNames': added_names
-                }
+                self._logger.info('New member(s) in AD group ' + group + 'detected.')
 
-                self.sensor_service.dispatch(trigger='activedirectory.watched_group_member_added',
-                                             payload=payload)
+                for person in added:
+                    payload = {
+                        'accountAdded': person[1],
+                        'groupName': group,
+                        'tenant': self.creds_name,
+                        'samAccountName': person[0]
+                    }
+
+                    self.sensor_service.dispatch(trigger='activedirectory.watched_'
+                                                         'group_member_added',
+                                                 payload=payload)
 
             if removed:
                 self._logger.info('Member removal in AD group ' + group + ' detected.')
-                payload = {
-                    'accountsRemoved': removed,
-                    'groupName': group,
-                    'tenant': self.creds_name,
-                    'samAccountNames': removed_names
-                }
 
-                self.sensor_service.dispatch(trigger='activedirectory.watched_group_member_removed',
-                                             payload=payload)
+                for person in removed:
+                    payload = {
+                        'accountRemoved': person[1],
+                        'groupName': group,
+                        'tenant': self.creds_name,
+                        'samAccountName': person[0]
+                    }
+
+                    self.sensor_service.dispatch(trigger='activedirectory.watched_'
+                                                         'group_member_removed',
+                                                 payload=payload)
 
             if not removed and not added:
                 self._logger.info('No change in AD group membership detected')
