@@ -10,15 +10,21 @@
       payload_schema:
         type: "object"
         properties:
-          response:
-            type: "object"
+          type: "object"
+            properties:
+              accountsAdded:
+                type: "array"
+              groupName:
+                type: "string"
+              tenant:
+                type: "string"
+              SamAccountNames:
+                type: "array"
     - name: "watched_group_member_removed"
       description: "Member Removed from Group Alert in Active Directory"
       payload_schema:
         type: "object"
         properties:
-          accountsAdded:
-            type: "array"
           accountsRemoved:
             type: "array"
           groupName:
