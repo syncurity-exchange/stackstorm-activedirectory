@@ -2,7 +2,7 @@
   name: watched_group_member_removed
   pack: activedirectory
   description: AD watched group memebership has a deletion
-  enabled: false
+  enabled: true
 
   type:
     ref: standard
