@@ -94,12 +94,12 @@ class ADAdminSensor(PollingSensor):
             removed_names = []
 
             for new_item in response_list:
-                self._logger.info('new_item')
-                self._logger.info(type(new_item))
-                self._logger.info(new_item)
-                self._logger.info('members')
-                self._logger.info(type(members))
-                self._logger.info(members)
+                # self._logger.info('new_item')
+                # self._logger.info(type(new_item))
+                # self._logger.info(new_item)
+                # self._logger.info('members')
+                # self._logger.info(type(members))
+                # self._logger.info(members)
                 if new_item not in members:
                     added.append(new_item)
                     added_names.append(new_item.get('SamAccountName'))
