@@ -15,7 +15,7 @@
             type: "string"
           tenant:
             type: "string"
-          SamAccountNames:
+          samAccountNames:
             type: "array"
     - name: "watched_group_member_removed"
       description: "Member Removed from Group Alert in Active Directory"
@@ -28,5 +28,5 @@
             type: "string"
           tenant:
             type: "string"
-          SamAccountNames:
+          samAccountNames:
             type: "array"

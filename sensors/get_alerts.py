@@ -114,7 +114,7 @@ class ADAdminSensor(PollingSensor):
                     'accountsAdded': added,
                     'groupName': group,
                     'tenant': self.creds_name,
-                    'SamAccountNames': added_names
+                    'samAccountNames': added_names
                 }
 
                 self.sensor_service.dispatch(trigger='activedirectory.watched_group_member_added',
@@ -126,7 +126,7 @@ class ADAdminSensor(PollingSensor):
                     'accountsRemoved': removed,
                     'groupName': group,
                     'tenant': self.creds_name,
-                    'SamAccountNames': removed_names
+                    'samAccountNames': removed_names
                 }
 
                 self.sensor_service.dispatch(trigger='activedirectory.watched_group_member_removed',
