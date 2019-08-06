@@ -55,9 +55,9 @@ class ADAdminSensor(PollingSensor):
         for group in self.groups:
 
             members = self._get_members(group)
-            # self._logger.info(group)
-            # self._logger.info('members')
-            # self._logger.info(members)
+            self._logger.info(group)
+            self._logger.info('members')
+            self._logger.info(members)
 
             output_ps = ("Try\n"
                          "{{\n"
