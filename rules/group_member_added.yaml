@@ -2,7 +2,7 @@
   name: watched_group_member_added
   pack: activedirectory
   description: AD watched group memebership has an addition
-  enabled: truew
+  enabled: true
 
   type:
     ref: standard
