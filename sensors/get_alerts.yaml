@@ -4,22 +4,20 @@
   description: "Get alerts for Active Directory"
   poll_interval: 120
   trigger_types:
-    -
-      name: "watched_group_member_added"
+    - name: "watched_group_member_added"
       description: "Member Added to Group Alert in Active Directory"
       payload_schema:
         type: "object"
         properties:
           type: "object"
-            properties:
-              accountsAdded:
-                type: "array"
-              groupName:
-                type: "string"
-              tenant:
-                type: "string"
-              SamAccountNames:
-                type: "array"
+            accountsAdded:
+              type: "array"
+            groupName:
+              type: "string"
+            tenant:
+              type: "string"
+            SamAccountNames:
+              type: "array"
     - name: "watched_group_member_removed"
       description: "Member Removed from Group Alert in Active Directory"
       payload_schema:
