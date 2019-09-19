@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
 
-"""Active Directory Integration - Sense admin list change"""
+"""Active Directory Integration - Sense admin list change
 
-from st2reactor.sensor.base import PollingSensor
+Process:
+Take in credentials
+Get old list of users in group
+Create powershell command to get new group membership
+Compare old list with new list
+Create separate triggers for any added members and any removed members
+"""
+
+import ast
+import json
+
 import winrm
+from st2reactor.sensor.base import PollingSensor
+from winrm.exceptions import AuthenticationError, BasicAuthDisabledError, \
+    InvalidCredentialsError, WinRMTransportError
 
 
 class ADAdminSensor(PollingSensor):
@@ -15,7 +28,6 @@ class ADAdminSensor(PollingSensor):
         super(ADAdminSensor, self).__init__(sensor_service=sensor_service,
                                             config=config,
                                             poll_interval=poll_interval)
-        self._trigger_ref = 'activedirectory.watched_group_changed'
 
         self._logger = self._sensor_service.get_logger(__name__)
 
@@ -39,7 +51,12 @@ class ADAdminSensor(PollingSensor):
                                      transport=transport,
                                      server_cert_validation='ignore')
 
-        self.members = ['first_run_place_holder']
+        self.members = {}
+
+        for group in self.groups:
+            self.members[group] = self._get_members(group)
+            if not self.members.get(group):
+                self.members[group] = [{'SamAccountName': 'initial'}]
 
     def setup(self):
         pass
@@ -48,11 +65,17 @@ class ADAdminSensor(PollingSensor):
 
         for group in self.groups:
 
-            members = self._get_members()
+            # Get old group membership
+            members = self._get_members(group)
+            self._logger.info(group)
+            self._logger.info('members')
+            self._logger.debug(members)
+
+            # Create query to get new group membership
 
             output_ps = ("Try\n"
                          "{{\n"
-                         "  {0} \n"
+                         "  {0} | ConvertTo-Json\n"
                          "}}\n"
                          "Catch\n"
                          "{{\n"
@@ -70,34 +93,85 @@ class ADAdminSensor(PollingSensor):
             self._logger.debug(powershell)
 
             # run powershell command
-            response = self.session.run_ps(powershell)
+            try:
+                response = self.session.run_ps(powershell)
+            except BasicAuthDisabledError as e:
+                self._logger.info(e)
+                self._logger.info('Basic auth is not enabled on the target domain controller.')
+                return
+            except WinRMTransportError as e:
+                self._logger.info(e)
+                self._logger.info('Transport error - cannot connect to domain controller')
+                return
+            except (AuthenticationError, InvalidCredentialsError) as e:
+                self._logger.info(e)
+                self._logger.info('The specified credentials were rejected by the server.')
+                return
 
-            response_output = response.__dict__['std_out']
+            self._logger.debug(response)
 
-            self._logger.debug(response_output)
+            response_list = json.loads(response.__dict__['std_out'])
 
-            response_list = response_output.split('\r\n\r\n')
+            self._logger.debug(response_list)
 
-            removed = list(set(members) - set(response_list))
-            added = list(set(response_list) - set(members))
+            removed = []
+            added = []
 
-            if removed or added:
-                self._logger.info('Change in AD group membership detected.')
-                payload = {
-                    'old_list': members,
-                    'new_list': response_list,
-                    'removed': removed,
-                    'added': added,
-                    'group': group,
-                    'tenant': self.creds_name
-                }
+            # Compare old membership list to new membership list
 
-                self.sensor_service.dispatch(trigger=self._trigger_ref,
-                                             payload=payload)
+            for new_item in response_list:
+                # self._logger.info('new_item')
+                # self._logger.info(type(new_item))
+                # self._logger.info(new_item)
+                # self._logger.info('members')
+                # self._logger.info(type(members))
+                # self._logger.info(members)
+                if new_item not in members:
+                    name = new_item.get('SamAccountName')
+                    new_person = [name, new_item]
+                    added.append(new_person)
+            for old_item in members:
+                if old_item not in response_list:
+                    name = old_item.get('SamAccountName')
+                    old_person = [name, old_item]
+                    removed.append(old_person)
 
-                self._set_members(members=response_list)
-            else:
+            # Create trigger for any added member
+            if added:
+                self._logger.info('New member(s) in AD group ' + group + 'detected.')
+
+                for person in added:
+                    payload = {
+                        'accountAdded': person[1],
+                        'groupName': group,
+                        'tenant': self.creds_name,
+                        'samAccountName': person[0]
+                    }
+
+                    self.sensor_service.dispatch(trigger='activedirectory.watched_'
+                                                         'group_member_added',
+                                                 payload=payload)
+
+            # Create trigger for any removed member
+            if removed:
+                self._logger.info('Member removal in AD group ' + group + ' detected.')
+
+                for person in removed:
+                    payload = {
+                        'accountRemoved': person[1],
+                        'groupName': group,
+                        'tenant': self.creds_name,
+                        'samAccountName': person[0]
+                    }
+
+                    self.sensor_service.dispatch(trigger='activedirectory.watched_'
+                                                         'group_member_removed',
+                                                 payload=payload)
+
+            if not removed and not added:
                 self._logger.info('No change in AD group membership detected')
+
+            self._set_members(members=response_list, group=group)
 
     def cleanup(self):
         pass
@@ -111,14 +185,16 @@ class ADAdminSensor(PollingSensor):
     def remove_trigger(self, trigger):
         pass
 
-    def _get_members(self):
-        if not self.members and hasattr(self.sensor_service, 'get_value'):
-            self.members = self.sensor_service.get_value('members')
+    def _get_members(self, group):
+        if not self.members.get(group) and hasattr(self.sensor_service, 'get_value'):
+            temp = self.sensor_service.get_value(group + '.members')
+            fixed = ast.literal_eval(temp)
+            self.members[group] = fixed
 
-        return self.members
+        return self.members[group]
 
-    def _set_members(self, members):
-        self.members = members
+    def _set_members(self, members, group):
+        self.members[group] = members
 
         if hasattr(self.sensor_service, 'set_value'):
-            self.sensor_service.set_value(name='members', value=members)
+            self.sensor_service.set_value(name=group + '.members', value=members)

@@ -4,12 +4,29 @@
   description: "Get alerts for Active Directory"
   poll_interval: 120
   trigger_types:
-    -
-      name: "watched_group_changed"
-      description: "Watched Group Change Alert in Active Directory"
+    - name: "watched_group_member_added"
+      description: "Member Added to Group Alert in Active Directory"
       payload_schema:
         type: "object"
         properties:
-          response:
-            type: "object"
-
+          accountAdded:
+            type: "string"
+          groupName:
+            type: "string"
+          tenant:
+            type: "string"
+          samAccountName:
+            type: "string"
+    - name: "watched_group_member_removed"
+      description: "Member Removed from Group Alert in Active Directory"
+      payload_schema:
+        type: "object"
+        properties:
+          accountRemoved:
+            type: "string"
+          groupName:
+            type: "string"
+          tenant:
+            type: "string"
+          samAccountName:
+            type: "string"
