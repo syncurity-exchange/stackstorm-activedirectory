@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.6
+
+- Updated and docs for sensor
+
 ## v0.1.5
 
 - Added sensor to watch specified AD group membership

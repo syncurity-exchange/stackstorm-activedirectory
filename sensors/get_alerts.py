@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 
-"""Active Directory Integration - Sense admin list change"""
+"""Active Directory Integration - Sense admin list change
+
+Process:
+Take in credentials
+Get old list of users in group
+Create powershell command to get new group membership
+Compare old list with new list
+Create separate triggers for any added members and any removed members
+"""
 
 import ast
 import json
 
 import winrm
 from st2reactor.sensor.base import PollingSensor
+from winrm.exceptions import AuthenticationError, BasicAuthDisabledError, \
+    InvalidCredentialsError, WinRMTransportError
 
 
 class ADAdminSensor(PollingSensor):
@@ -55,10 +65,13 @@ class ADAdminSensor(PollingSensor):
 
         for group in self.groups:
 
+            # Get old group membership
             members = self._get_members(group)
             self._logger.info(group)
             self._logger.info('members')
-            self._logger.info(members)
+            self._logger.debug(members)
+
+            # Create query to get new group membership
 
             output_ps = ("Try\n"
                          "{{\n"
@@ -80,16 +93,31 @@ class ADAdminSensor(PollingSensor):
             self._logger.debug(powershell)
 
             # run powershell command
-            response = self.session.run_ps(powershell)
+            try:
+                response = self.session.run_ps(powershell)
+            except (AuthenticationError, InvalidCredentialsError) as e:
+                self.logger.info(e)
+                self.logger.info('The specified credentials were rejected by the server.')
+                return
+            except BasicAuthDisabledError as e:
+                self.logger.info(e)
+                self.logger.info('Basic auth is not enabled on the target domain controller.')
+                return
+            except WinRMTransportError as e:
+                self.logger.info(e)
+                self.logger.info('Transport error - cannot connect to domain controller')
+                return
 
-            self._logger.info(response)
+            self._logger.debug(response)
 
             response_list = json.loads(response.__dict__['std_out'])
 
-            self._logger.info(response_list)
+            self._logger.debug(response_list)
 
             removed = []
             added = []
+
+            # Compare old membership list to new membership list
 
             for new_item in response_list:
                 # self._logger.info('new_item')
@@ -108,6 +136,7 @@ class ADAdminSensor(PollingSensor):
                     old_person = [name, old_item]
                     removed.append(old_person)
 
+            # Create trigger for any added member
             if added:
                 self._logger.info('New member(s) in AD group ' + group + 'detected.')
 
@@ -123,6 +152,7 @@ class ADAdminSensor(PollingSensor):
                                                          'group_member_added',
                                                  payload=payload)
 
+            # Create trigger for any removed member
             if removed:
                 self._logger.info('Member removal in AD group ' + group + ' detected.')
 
