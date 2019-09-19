@@ -95,10 +95,6 @@ class ADAdminSensor(PollingSensor):
             # run powershell command
             try:
                 response = self.session.run_ps(powershell)
-            except (AuthenticationError, InvalidCredentialsError) as e:
-                self._logger.info(e)
-                self._logger.info('The specified credentials were rejected by the server.')
-                return
             except BasicAuthDisabledError as e:
                 self._logger.info(e)
                 self._logger.info('Basic auth is not enabled on the target domain controller.')
@@ -106,6 +102,10 @@ class ADAdminSensor(PollingSensor):
             except WinRMTransportError as e:
                 self._logger.info(e)
                 self._logger.info('Transport error - cannot connect to domain controller')
+                return
+            except (AuthenticationError, InvalidCredentialsError) as e:
+                self._logger.info(e)
+                self._logger.info('The specified credentials were rejected by the server.')
                 return
 
             self._logger.debug(response)
